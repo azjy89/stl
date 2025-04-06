@@ -6,6 +6,10 @@
 template <class T>
 class Vector
 {
+public:
+    class Iterator;
+    class ConstIterator;
+
 private:
     size_t _size;
     size_t _capacity;
@@ -19,7 +23,7 @@ public:
     // Default Constructor
     Vector();
 
-    explicit Vector(uint32_t size);
+    explicit Vector(uint32_t const &size);
 
     // Copy Constructor
     Vector(Vector const &other);
@@ -45,7 +49,7 @@ public:
     size_t capacity() const;
 
     // Changes capacity to requested amount, does not change size;
-    void reserve(size_t reservation_size);
+    void reserve(size_t const &reservation_size);
 
     // Returns the number of elements in the vector
     size_t size() const;
@@ -74,7 +78,7 @@ public:
 
     // void emplace_back(Args...)
 
-    void resize(size_t size, T val);
+    void resize(size_t const &size, T const &val);
 
     /*
     *
@@ -85,7 +89,36 @@ public:
     */
 
     // Access element with bounds checking
-    T &at(uint32_t idx);
+    T &at(uint32_t const &idx) const;
+
+    // Access element without bounds checking
+    T &operator[](std::size_t const &idx) const;
+
+    // Access element at 0th index
+    T &front() const;
+
+    // Access element as last index
+    T &back() const;
+
+    /*
+    *
+    *
+    ITERATORS
+    *
+    *
+    */
+
+    // Gives an iterator to first element in data
+    Vector<T>::Iterator begin() { return Vector<T>::Iterator(_data); }
+
+    Vector<T>::Iterator const begin() const { return Vector<T>::ConstIterator(_data); }
+
+    // Gives an iterator to after last element in data
+    Vector<T>::Iterator end() { return Vector<T>::Iterator(_data + _size); }
+
+    Vector<T>::ConstIterator end() const { return Vector<T>::ConstIterator(_data); }
+
+    Vector<T>::Iterator insert(Vector<T>::ContIterator &pos, const)
 };
 
 /*
@@ -102,7 +135,7 @@ Vector<T>::Vector() : _size(0), _data(0), _capacity(0) {}
 
 // Size Constructor
 template <class T>
-inline Vector<T>::Vector(uint32_t size) : _size(size), _capacity(size), _data(new T[size])
+inline Vector<T>::Vector(std::uint32_t const &size) : _size(size), _capacity(size), _data(new T[size])
 {
     for (int i = 0; i < _size; ++i)
         _data[i] = T();
@@ -112,7 +145,7 @@ inline Vector<T>::Vector(uint32_t size) : _size(size), _capacity(size), _data(ne
 template <class T>
 inline Vector<T>::Vector(Vector<T> const &other) : _size(other._size), _capacity(other._capacity), _data(new T[other._size])
 {
-    for (size_t i = 0; i < other._size; ++i)
+    for (std::size_t i = 0; i < other._size; ++i)
         _data[i] = other._data[i];
 }
 
@@ -125,14 +158,14 @@ inline Vector<T> &Vector<T>::operator=(Vector<T> const &other)
 
     if (other._size <= _capacity)
     {
-        for (size_t i = 0; i < other._size; ++i)
+        for (std::size_t i = 0; i < other._size; ++i)
             _data[i] = other._data[i];
         _size = other._size;
         return *this;
     }
 
     T *ptr = new T[other._size];
-    for (size_t i = 0; i < other._size; ++i)
+    for (std::size_t i = 0; i < other._size; ++i)
         ptr[i] = other._data[i];
 
     delete[] _data;
@@ -183,11 +216,11 @@ inline void Vector<T>::pop_back()
 }
 
 template <class T>
-inline void Vector<T>::resize(size_t size, T value)
+inline void Vector<T>::resize(std::size_t const &size, T const &value)
 {
     if (size < _size)
     {
-        for (size_t i = size; i < _size; ++i)
+        for (std::size_t i = size; i < _size; ++i)
             _data[i].~T();
         _size = size;
     }
@@ -196,7 +229,7 @@ inline void Vector<T>::resize(size_t size, T value)
         if (size > _capacity)
             reserve(size);
 
-        for (size_t i = _size; i < size; ++i)
+        for (std::size_t i = _size; i < size; ++i)
             _data[i] = value;
         _size = size;
     }
@@ -217,13 +250,13 @@ inline bool Vector<T>::empty() const
 }
 
 template <class T>
-inline size_t Vector<T>::capacity() const
+inline std::size_t Vector<T>::capacity() const
 {
     return _capacity;
 }
 
 template <class T>
-inline void Vector<T>::reserve(size_t reservation_size)
+inline void Vector<T>::reserve(std::size_t const &reservation_size)
 {
     if (reservation_size <= _capacity)
         return;
@@ -239,13 +272,13 @@ inline void Vector<T>::reserve(size_t reservation_size)
 }
 
 template <class T>
-size_t Vector<T>::max_size() const
+std::size_t Vector<T>::max_size() const
 {
-    return std::numeric_limits<size_t>::max();
+    return std::numeric_limits<std::size_t>::max();
 }
 
 template <class T>
-inline size_t Vector<T>::size() const
+inline std::size_t Vector<T>::size() const
 {
     return _size;
 }
@@ -275,9 +308,41 @@ ELEMENT ACCESS
 */
 
 template <class T>
-inline T &Vector<T>::at(uint32_t idx)
+inline T &Vector<T>::at(std::uint32_t const &idx) const
 {
     if (static_cast<size_t>(idx) >= _size)
         throw std::out_of_range("Index out of range");
     return _data[idx];
 }
+
+template <class T>
+inline T &Vector<T>::operator[](std::size_t const &idx) const
+{
+    if (index >= _size)
+        throw std::out_of_range("Index out of range");
+    return _data[idx];
+}
+
+template <class T>
+inline T &Vector<T>::front() const
+{
+    if (_size == 0)
+        throw std::out_of_range("Vector is empty");
+    return _data[0];
+}
+
+template <class T>
+inline T &Vector<T>::back() const
+{
+    if (_size == 0)
+        throw std::out_of_range("Vector is empty");
+    return _data[_size - 1];
+}
+
+/*
+*
+*
+ITERATORS
+*
+*
+*/
